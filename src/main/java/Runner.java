@@ -1,17 +1,15 @@
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Runner {
     final private AtomicBoolean stop;
-    final private LinkedBlockingQueue<ArrayList<Integer>> queue;
+    final private Queue<ArrayList<Integer>> queue;
     final private Integer seconds;
 
     Runner(Integer seconds) {
         this.stop = new AtomicBoolean(false);
-        this.queue = new LinkedBlockingQueue<>();
+        this.queue = new LinkedList<>();
         this.seconds = seconds;
     }
 
