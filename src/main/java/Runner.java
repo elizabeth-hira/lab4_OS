@@ -1,42 +1,45 @@
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Runner {
-    final private AtomicBoolean stop;
-    final private Queue<ArrayList<Integer>> queue;
-    final private Integer seconds;
+    private final AtomicBoolean stop;
+    private final Queue<ArrayList<Integer>> queue;
+    private final int delay;
+    private final int number;
+    private final int deathTime;
 
-    Runner(Integer seconds) {
+    private final ExecutorService pool;
+
+    Runner(int delay, int number, int deathTime) {
         this.stop = new AtomicBoolean(false);
         this.queue = new LinkedList<>();
-        this.seconds = seconds;
+        this.delay = delay;
+        this.number = number;
+
+        pool = Executors.newFixedThreadPool(2 * number);
+        this.deathTime = deathTime;
     }
 
     public void start() {
-        final Consumer consumer = new Consumer(queue, stop);
-        final Producer producer = new Producer(queue, stop, seconds);
-        producer.producing();
-        consumer.consuming();
-        final Timer timer = new Timer();
-        timer.schedule(new Stopper(), 10000);
-    }
+        for(int i = 0; i < number; i++) {
+            pool.execute(new Consumer(queue, stop));
+            pool.execute(new Producer(queue, stop, delay));
+        }
 
-    private class Stopper extends TimerTask {
-        @Override
-        public void run() {
+        new Thread(() -> {
             try {
-                stop.set(true);
-                Thread.sleep(2000);
-                System.exit(0);
+                Thread.sleep(deathTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
+            stop.set(true);
+            pool.shutdown();
+        }).start();
     }
 
     public static void main(String[] args) {
-        Runner runner = new Runner(150);
-        runner.start();
+        new Runner(150, 3, 10000).start();
     }
 }
