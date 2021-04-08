@@ -7,25 +7,31 @@ public class Runner {
     private final AtomicBoolean stop;
     private final Queue<ArrayList<Integer>> queue;
     private final int delay;
-    private final int number;
+    private final int consumerNumber;
+    private final int producerNumber;
     private final int deathTime;
+    private final int queueCapacity;
 
     private final ExecutorService pool;
 
-    Runner(int delay, int number, int deathTime) {
+    public Runner(int delay, int consumerNumber, int producerNumber, int queueCapacity, int deathTime) {
         this.stop = new AtomicBoolean(false);
         this.queue = new LinkedList<>();
         this.delay = delay;
-        this.number = number;
+        this.consumerNumber = consumerNumber;
+        this.producerNumber = producerNumber;
+        this.queueCapacity = queueCapacity;
 
-        pool = Executors.newFixedThreadPool(2 * number);
+        pool = Executors.newCachedThreadPool();
         this.deathTime = deathTime;
     }
 
     public void start() {
-        for(int i = 0; i < number; i++) {
+        for(int i = 0; i < consumerNumber; i++) {
             pool.execute(new Consumer(queue, stop));
-            pool.execute(new Producer(queue, stop, delay));
+        }
+        for(int i = 0; i < producerNumber; i++) {
+            pool.execute(new Producer(queue, stop, queueCapacity, delay));
         }
 
         new Thread(() -> {
@@ -40,6 +46,6 @@ public class Runner {
     }
 
     public static void main(String[] args) {
-        new Runner(150, 3, 10000).start();
+        new Runner(150, 3, 2, 5,10000).start();
     }
 }

@@ -27,7 +27,7 @@ public class Consumer implements Runnable{
                 }
 
                 System.out.println(sum / poll.size());
-                queue.notify();
+                queue.notifyAll();
             }
         }
     }
